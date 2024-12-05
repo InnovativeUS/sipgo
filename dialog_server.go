@@ -143,9 +143,9 @@ func (s *DialogServerSession) TransactionRequest(ctx context.Context, req *sip.R
 
 	// Check Route Header
 	// Should be handled by transport layer but here we are making this explicit
-	if rr := req.Route(); rr != nil {
-		req.SetDestination(rr.Address.HostPort())
-	}
+	// if rr := req.Route(); rr != nil {
+	// 	req.SetDestination(rr.Address.HostPort())
+	// }
 
 	// TODO check correct behavior strict routing vs loose routing
 	// recordRoute := req.RecordRoute()
