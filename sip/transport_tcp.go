@@ -117,6 +117,7 @@ func (t *transportTCP) initConnection(conn net.Conn, raddr string, handler Messa
 	c := &TCPConnection{
 		Conn:     conn,
 		refcount: 1 + IdleConnection,
+		log:      t.log,
 	}
 	t.pool.Add(laddr, c)
 	t.pool.Add(raddr, c)
@@ -200,6 +201,7 @@ type TCPConnection struct {
 
 	mu       sync.RWMutex
 	refcount int
+	log      *slog.Logger
 }
 
 func (c *TCPConnection) Ref(i int) int {
@@ -242,7 +244,7 @@ func (c *TCPConnection) Read(b []byte) (n int, err error) {
 	// Some debug hook. TODO move to proper way
 	n, err = c.Conn.Read(b)
 	if SIPDebug {
-		logSIPRead("TCP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
+		logSIPRead(c.log, "TCP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
 	}
 	return n, err
 }
@@ -251,7 +253,7 @@ func (c *TCPConnection) Write(b []byte) (n int, err error) {
 	// Some debug hook. TODO move to proper way
 	n, err = c.Conn.Write(b)
 	if SIPDebug {
-		logSIPWrite("TCP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
+		logSIPWrite(c.log, "TCP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
 	}
 	return n, err
 }

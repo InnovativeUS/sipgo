@@ -128,6 +128,7 @@ func (t *transportWS) initConnection(conn net.Conn, raddr string, clientSide boo
 		Conn:       conn,
 		refcount:   1 + IdleConnection,
 		clientSide: clientSide,
+		log:        t.log,
 	}
 	t.pool.Add(laddr, c)
 	t.pool.Add(raddr, c)
@@ -259,6 +260,8 @@ type WSConnection struct {
 	clientSide bool
 	mu         sync.RWMutex
 	refcount   int
+
+	log *slog.Logger
 }
 
 func (c *WSConnection) Ref(i int) int {
@@ -358,7 +361,7 @@ func (c *WSConnection) Read(b []byte) (n int, err error) {
 
 		// header.Masked = false
 		if SIPDebug {
-			logSIPRead("WS", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), data)
+			logSIPRead(c.log, "WS", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), data)
 		}
 
 		n += copy(b[n:], data)
@@ -373,7 +376,7 @@ func (c *WSConnection) Read(b []byte) (n int, err error) {
 
 func (c *WSConnection) Write(b []byte) (n int, err error) {
 	if SIPDebug {
-		logSIPWrite("WS", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b)
+		logSIPWrite(c.log, "WS", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b)
 	}
 
 	fs := ws.NewFrame(ws.OpText, true, b)

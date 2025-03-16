@@ -25,24 +25,24 @@ func SIPDebugTracer(t SIPTracer) {
 	siptracer = t
 }
 
-func logSIPRead(transport string, laddr string, raddr string, sipmsg []byte) {
+func logSIPRead(l *slog.Logger, transport string, laddr string, raddr string, sipmsg []byte) {
 	if siptracer != nil {
 		siptracer.SIPTraceRead(transport, laddr, raddr, sipmsg)
 		return
 	}
 
 	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
-		slog.Debug(fmt.Sprintf("%s read from %s <- %s:\n%s", transport, laddr, raddr, sipmsg))
+		l.Debug(fmt.Sprintf("%s read from %s <- %s:\n%s", transport, laddr, raddr, sipmsg))
 	}
 }
 
-func logSIPWrite(transport string, laddr string, raddr string, sipmsg []byte) {
+func logSIPWrite(l *slog.Logger, transport string, laddr string, raddr string, sipmsg []byte) {
 	if siptracer != nil {
 		siptracer.SIPTraceWrite(transport, laddr, raddr, sipmsg)
 		return
 	}
 	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
-		slog.Debug(fmt.Sprintf("%s write to %s -> %s:\n%s", transport, laddr, raddr, sipmsg))
+		l.Debug(fmt.Sprintf("%s write to %s -> %s:\n%s", transport, laddr, raddr, sipmsg))
 	}
 }
 

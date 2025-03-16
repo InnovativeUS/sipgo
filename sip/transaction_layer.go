@@ -32,9 +32,9 @@ type TransactionLayer struct {
 type TransactionLayerOption func(tpl *TransactionLayer)
 
 func WithTransactionLayerLogger(l *slog.Logger) TransactionLayerOption {
-	return func(tpl *TransactionLayer) {
+	return func(txl *TransactionLayer) {
 		if l != nil {
-			tpl.log = l.With("caller", "TransactionLayer")
+			txl.log = l.With("caller", "TransactionLayer")
 		}
 	}
 }

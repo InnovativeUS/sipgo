@@ -62,6 +62,7 @@ func (t *transportUDP) Serve(conn net.PacketConn, handler MessageHandler) error 
 		PacketConn: conn,
 		PacketAddr: conn.LocalAddr().String(),
 		Listener:   true,
+		log:        t.log,
 	}
 
 	t.pool.Add(c.PacketAddr, c)
@@ -110,6 +111,7 @@ func (t *transportUDP) createConnection(ctx context.Context, laddr Addr, raddr A
 		PacketAddr: udpconn.LocalAddr().String(),
 		// 1 ref for current return , 2 ref for reader
 		refcount: 2 + IdleConnection,
+		log:      t.log,
 	}
 
 	addr := raddr.String()
@@ -306,6 +308,7 @@ type UDPConnection struct {
 
 	mu       sync.RWMutex
 	refcount int
+	log      *slog.Logger
 }
 
 func (c *UDPConnection) close() error {
@@ -380,7 +383,7 @@ func (c *UDPConnection) TryClose() (int, error) {
 func (c *UDPConnection) Read(b []byte) (n int, err error) {
 	n, err = c.Conn.Read(b)
 	if SIPDebug {
-		logSIPRead("UDP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
+		logSIPRead(c.log, "UDP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
 	}
 	return n, err
 }
@@ -388,7 +391,7 @@ func (c *UDPConnection) Read(b []byte) (n int, err error) {
 func (c *UDPConnection) Write(b []byte) (n int, err error) {
 	n, err = c.Conn.Write(b)
 	if SIPDebug {
-		logSIPWrite("UDP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
+		logSIPWrite(c.log, "UDP", c.Conn.LocalAddr().String(), c.Conn.RemoteAddr().String(), b[:n])
 	}
 	return n, err
 }
@@ -397,7 +400,7 @@ func (c *UDPConnection) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	// Some debug hook. TODO move to proper way
 	n, addr, err = c.PacketConn.ReadFrom(b)
 	if SIPDebug && err == nil {
-		logSIPRead("UDP", c.PacketConn.LocalAddr().String(), addr.String(), b[:n])
+		logSIPRead(c.log, "UDP", c.PacketConn.LocalAddr().String(), addr.String(), b[:n])
 	}
 	return n, addr, err
 }
@@ -406,7 +409,7 @@ func (c *UDPConnection) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	// Some debug hook. TODO move to proper way
 	n, err = c.PacketConn.WriteTo(b, addr)
 	if SIPDebug && err == nil {
-		logSIPWrite("UDP", c.PacketConn.LocalAddr().String(), addr.String(), b[:n])
+		logSIPWrite(c.log, "UDP", c.PacketConn.LocalAddr().String(), addr.String(), b[:n])
 	}
 	return n, err
 }
