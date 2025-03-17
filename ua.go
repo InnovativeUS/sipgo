@@ -14,7 +14,8 @@ type UserAgent struct {
 	dnsResolver *net.Resolver
 	tlsConfig   *tls.Config
 	parser      *sip.Parser
-	log         *slog.Logger
+	txLog       *slog.Logger
+	tpLog       *slog.Logger
 	tp          *sip.TransportLayer
 	tx          *sip.TransactionLayer
 }
@@ -64,11 +65,18 @@ func WithUserAgentParser(p *sip.Parser) UserAgentOption {
 	}
 }
 
-// WithUserAgentLoggger allows setting the logger for the transaction
-// and transport layer
-func WithUserAgentLogger(logger *slog.Logger) UserAgentOption {
+// WithUserAgentTransactionLogger allows setting the logger for the transaction
+func WithUserAgentTransactionLogger(logger *slog.Logger) UserAgentOption {
 	return func(s *UserAgent) error {
-		s.log = logger
+		s.txLog = logger
+		return nil
+	}
+}
+
+// WithUserAgentTransactionLogger allows setting the logger for the transaction
+func WithUserAgentTransportLogger(logger *slog.Logger) UserAgentOption {
+	return func(s *UserAgent) error {
+		s.tpLog = logger
 		return nil
 	}
 }
@@ -90,8 +98,8 @@ func NewUA(options ...UserAgentOption) (*UserAgent, error) {
 		}
 	}
 
-	ua.tp = sip.NewTransportLayer(ua.dnsResolver, ua.parser, ua.tlsConfig, sip.WithTransportLayerLogger(ua.log))
-	ua.tx = sip.NewTransactionLayer(ua.tp, sip.WithTransactionLayerLogger(ua.log))
+	ua.tp = sip.NewTransportLayer(ua.dnsResolver, ua.parser, ua.tlsConfig, sip.WithTransportLayerLogger(ua.tpLog))
+	ua.tx = sip.NewTransactionLayer(ua.tp, sip.WithTransactionLayerLogger(ua.txLog))
 	return ua, nil
 }
 
