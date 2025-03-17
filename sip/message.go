@@ -131,8 +131,9 @@ type MessageData struct {
 	tp         string
 
 	// This is for internal routing
-	src  string
-	dest string
+	src    string
+	dest   string
+	ViaNAT bool
 }
 
 func (msg *MessageData) Body() []byte {
@@ -143,6 +144,10 @@ func (msg *MessageData) Body() []byte {
 func (msg *MessageData) SetBody(body []byte) {
 	var length ContentLengthHeader
 	msg.body = body
+
+	// The Content-Length header field value is used to locate the end of
+	//   each SIP message in a stream.  It will always be present when SIP
+	//   messages are sent over stream-oriented transports.
 	if body == nil {
 		length = ContentLengthHeader(0)
 	} else {
