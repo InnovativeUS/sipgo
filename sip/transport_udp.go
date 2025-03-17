@@ -110,7 +110,6 @@ func (t *transportUDP) createConnection(ctx context.Context, laddr Addr, raddr A
 		PacketAddr: udpconn.LocalAddr().String(),
 		// 1 ref for current return , 2 ref for reader
 		refcount: 2 + IdleConnection,
-		log:      t.log,
 	}
 
 	addr := raddr.String()
@@ -307,7 +306,6 @@ type UDPConnection struct {
 
 	mu       sync.RWMutex
 	refcount int
-	log      *slog.Logger
 }
 
 func (c *UDPConnection) close() error {
