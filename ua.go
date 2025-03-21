@@ -2,7 +2,6 @@ package sipgo
 
 import (
 	"crypto/tls"
-	"log/slog"
 	"net"
 
 	"github.com/emiago/sipgo/sip"
@@ -14,8 +13,8 @@ type UserAgent struct {
 	dnsResolver *net.Resolver
 	tlsConfig   *tls.Config
 	parser      *sip.Parser
-	txLog       *slog.Logger
-	tpLog       *slog.Logger
+	txOptions   []sip.TransactionLayerOption
+	tpOptions   []sip.TransportLayerOption
 	tp          *sip.TransportLayer
 	tx          *sip.TransactionLayer
 }
@@ -65,18 +64,18 @@ func WithUserAgentParser(p *sip.Parser) UserAgentOption {
 	}
 }
 
-// WithUserAgentTransactionLogger allows setting the logger for the transaction
-func WithUserAgentTransactionLogger(logger *slog.Logger) UserAgentOption {
+// WithUserAgentTransactionLayerOptions allows setting options for the transaction layer
+func WithUserAgentTransactionLayerOptions(o ...sip.TransactionLayerOption) UserAgentOption {
 	return func(s *UserAgent) error {
-		s.txLog = logger
+		s.txOptions = o
 		return nil
 	}
 }
 
-// WithUserAgentTransactionLogger allows setting the logger for the transaction
-func WithUserAgentTransportLogger(logger *slog.Logger) UserAgentOption {
+// WithUserAgentTransportLayerOptions allows setting options for the transport layer
+func WithUserAgentTransportLayerOptions(o ...sip.TransportLayerOption) UserAgentOption {
 	return func(s *UserAgent) error {
-		s.tpLog = logger
+		s.tpOptions = o
 		return nil
 	}
 }
@@ -98,8 +97,8 @@ func NewUA(options ...UserAgentOption) (*UserAgent, error) {
 		}
 	}
 
-	ua.tp = sip.NewTransportLayer(ua.dnsResolver, ua.parser, ua.tlsConfig, sip.WithTransportLayerLogger(ua.tpLog))
-	ua.tx = sip.NewTransactionLayer(ua.tp, sip.WithTransactionLayerLogger(ua.txLog))
+	ua.tp = sip.NewTransportLayer(ua.dnsResolver, ua.parser, ua.tlsConfig, ua.tpOptions...)
+	ua.tx = sip.NewTransactionLayer(ua.tp, ua.txOptions...)
 	return ua, nil
 }
 
