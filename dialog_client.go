@@ -431,9 +431,19 @@ func (s *DialogClientSession) WriteBye(ctx context.Context, bye *sip.Request) er
 // NOTE: it does not copy Via header. This is left to transport or caller to enforce
 func newAckRequestUAC(inviteRequest *sip.Request, inviteResponse *sip.Response, body []byte) *sip.Request {
 	Recipient := &inviteRequest.Recipient
+	via := inviteRequest.Via()
+
 	if contact := inviteResponse.Contact(); contact != nil {
 		Recipient = &contact.Address
 	}
+
+	if _, ok := via.Params.Get("rport"); ok {
+		Recipient = &sip.Uri{
+			Host: via.Host,
+			Port: via.Port,
+		}
+	}
+
 	ackRequest := sip.NewRequest(
 		sip.ACK,
 		*Recipient.Clone(),
